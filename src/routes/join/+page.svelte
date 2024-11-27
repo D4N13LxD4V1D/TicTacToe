@@ -99,8 +99,7 @@
         max-width: 500px;
     }
 
-    [type="text"],
-    [type="number"] {
+    [type="text"] {
         width: 100%;
         max-width: 300px;
         padding: 12px 20px;
@@ -118,8 +117,7 @@
         text-transform: uppercase;
     }
 
-    [type="text"]:focus,
-    [type="number"]:focus {
+    [type="text"]:focus {
         border: 2px solid #00ffc9;
         box-shadow: 0 0 15px #00ffc9;
         background-color: #0b0615;
@@ -131,10 +129,6 @@
     input::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
-    }
-
-    input[type="number"] {
-        -moz-appearance: textfield;
     }
 
     label {

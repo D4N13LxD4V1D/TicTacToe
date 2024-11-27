@@ -76,7 +76,7 @@
     });
 
     socket.on("gameOver", (winner) => {
-        if (winner === "draw") popup.showPopup("IT'S A DRAW!");
+        if (winner === "draw") popup.showPopup("DRAW!");
         else if (winner === myTurn) popup.showPopup("YOU WON!");
         else popup.showPopup("YOU LOST!");
     });
