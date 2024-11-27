@@ -106,7 +106,6 @@
         overflow: hidden;
         white-space: nowrap;
         width: 0;
-        border-right: 2px solid #00ffc9;
         animation: typing 3s steps(40) 1s forwards;
     }
 
