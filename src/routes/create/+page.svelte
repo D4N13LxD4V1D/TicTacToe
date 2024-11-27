@@ -22,7 +22,6 @@
         <label for="room">Room ID:</label>
         <input type="text" id="room" name="room" value={room} readonly />
         <br /><br />
-        <br /><br />
 
         <label for="player">Player Name:</label>
         <input
