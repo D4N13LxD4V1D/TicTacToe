@@ -95,7 +95,7 @@
 
     const close = () => {
         restart();
-        socket.disconnect();
+        socket.emit("leaveRoom");
 
         if (browser) {
             window.history.back();

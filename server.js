@@ -60,12 +60,13 @@ export function websocketServer(server) {
                 io.to(id).emit('update', game, true);
             });
 
-            socket.once('disconnect', () => {
+            socket.on('leaveRoom', () => {
                 const index = game.players.indexOf(player);
                 if (index !== -1) game.players.splice(index, 1);
                 if (game.players.length < 2) game.start = false;
                 if (game.players.length === 0) games.delete(id);
                 io.to(id).emit('update', game);
+                socket.leave(id);
             });
         });
     });
