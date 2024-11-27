@@ -1,44 +1,17 @@
 <script lang="ts">
+    import { enhance } from "$app/forms";
+    import { browser } from "$app/environment";
+    import type { PageServerData, ActionData } from "./$types";
+
     import x from "$lib/assets/x.png";
     import o from "$lib/assets/o.png";
 
-    import { goto } from "$app/navigation";
-    import { socket } from "$lib";
-    import { onMount } from "svelte";
-    import { writable } from "svelte/store";
-
-    const gameIDs = writable<string[]>();
-
-    onMount(() => {
-        socket.emit("get-games");
-
-        socket.on("games", (games) => {
-            $gameIDs = games;
-        });
-
-        socket.on("new-game", (id) => {
-            $gameIDs = [...$gameIDs, id];
-        });
-    });
-
-    const back = () => {
-        window.location.href = "/";
-    };
-
-    const reload = () => {
-        window.location.reload();
-    };
+    let { data, form }: { data: PageServerData; form: ActionData } = $props();
+    let { room, player } = data;
 </script>
 
-{#snippet lobby(id: number)}
-    <tr>
-        <td>{id}</td>
-        <td><button onclick={() => goto(`/game/${id}`)}>Join</button></td>
-    </tr>
-{/snippet}
-
 <div class="lobby">
-    <div class="lobby-content">
+    <form method="POST" class="lobby-content" use:enhance>
         <div class="xox">
             <img src={x} alt="xox" />
             <img src={o} alt="xox" />
@@ -46,19 +19,31 @@
             <img src={o} alt="xox" />
         </div>
 
-        <label for="lobbies">Room ID:</label>
-        <input type="text" id="player-id" name="p-id"><br><br>
-        
-        <br><br>
+        <label for="room">Room ID:</label>
+        <input type="text" id="room" name="room" value={room} readonly />
+        <br /><br />
+        <br /><br />
 
-        <label for="name">Player Name:</label>
-        <input type="text" id="player-name" name="name"><br><br>
+        <label for="player">Player Name:</label>
+        <input
+            type="text"
+            id="player"
+            name="player"
+            value={form?.player ?? player ?? ""}
+        />
+        <br /><br />
 
         <div class="buttons">
-            <button class="buttons">BACK</button>
-            <button class="buttons">JOIN</button>
+            <button
+                type="button"
+                class="buttons"
+                onclick={() => {
+                    if (browser) window.history.back();
+                }}>BACK</button
+            >
+            <button type="submit" class="buttons">START</button>
         </div>
-    </div>
+    </form>
 </div>
 
 <style>
@@ -176,7 +161,8 @@
         .lobby-content {
             width: 80%;
         }
-        [type="text"], [type="text"]:focus{
+        [type="text"],
+        [type="text"]:focus {
             font-size: 16px;
         }
         .xox {

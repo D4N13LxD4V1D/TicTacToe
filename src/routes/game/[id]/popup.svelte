@@ -1,53 +1,34 @@
 <script lang="ts">
     import x from "$lib/assets/x.png";
     import o from "$lib/assets/o.png";
-    import { audio, isPlaying } from "$lib/audioStore"; // Import global audio state
-    import popupMusic from "$lib/assets/Game Over sound effect.mp3"; // Path to your music file
 
     let {
-        message,
         popup = $bindable(),
+        open = () => {},
         close = () => {},
         restart = () => {},
     } = $props();
 
-    export const showPopup = () => {
+    let message = $state("");
+
+    export const showPopup = (m: string) => {
+        message = m;
         popup.style.display = "flex";
-        stopGlobalAudio();  // Pause global audio before playing the popup music
-        playMusic();        // Play music when the popup is shown
+        open();
     };
 
-    let audioElement: HTMLAudioElement | null = null;
-
-    const playMusic = () => {
-        if (!audioElement) {
-            audioElement = new Audio(popupMusic);
-            audioElement.volume = 0.5; // Set volume (0.0 - 1.0)
-            audioElement.play().catch((err) => console.log("Error playing popup music:", err));
-        } else {
-            audioElement.play().catch((err) => console.log("Error playing popup music:", err));
-        }
-    };
-
-    const stopMusic = () => {
-        if (audioElement) {
-            audioElement.pause();
-            audioElement.currentTime = 0; // Reset music to the beginning
-        }
-    };
-
-    const stopGlobalAudio = () => {
-        // Pause and reset the global audio (if it's playing)
-        audio.subscribe((sharedAudio) => {
-            sharedAudio.pause();
-            sharedAudio.currentTime = 0;  // Reset global audio to start
-        });
-    };
-
-    const handleClose = () => {
+    export const hidePopup = () => {
         popup.style.display = "none";
-        stopMusic(); // Stop music when the popup is closed
+    };
+
+    export const closePopup = () => {
+        popup.style.display = "none";
         close();
+    };
+
+    export const playAgain = () => {
+        popup.style.display = "none";
+        restart();
     };
 </script>
 
@@ -61,21 +42,13 @@
         </div>
         <h2 id="popupMessage">{message}</h2>
         <div class="buttons">
-            <button
-                class="buttons"
-                onclick={() => {
-                    popup.style.display = "none";
-                    close();
-                }}>QUIT</button
-            >
-            <button class="buttons" onclick={() => restart()}>PLAY AGAIN</button
-            >
+            <button class="buttons" onclick={closePopup}>QUIT</button>
+            <button class="buttons" onclick={playAgain}>PLAY AGAIN</button>
         </div>
     </div>
 </div>
 
 <style>
-
     .popup {
         display: none;
         position: fixed;
@@ -148,7 +121,7 @@
         .popup-content {
             width: 80%;
         }
-        .popup h2{
+        .popup h2 {
             font-size: 30px;
         }
         .xox {

@@ -1,8 +1,12 @@
 <script lang="ts">
     import "../app.css";
 
+    import BGM from "./bgm.svelte";
+
     let { children } = $props();
 </script>
+
+<BGM />
 
 {@render children()}
 

@@ -1,45 +1,67 @@
 <script lang="ts">
     import Popup from "./popup.svelte";
+
+    import { invalidateAll } from "$app/navigation";
+    import { browser } from "$app/environment";
+
     import { socket } from "$lib";
-    import { page } from "$app/stores";
+    import type { PageServerData } from "./$types";
 
     import x from "$lib/assets/x.png";
     import o from "$lib/assets/o.png";
-    import clickSound from "$lib/assets/clicksound.wav"; // Import click sound
 
-    socket.emit("join", $page.params.id);
+    import clickSound from "$lib/assets/clicksound.wav?url";
+    import popupMusic from "$lib/assets/gameover.mp3?url";
 
     let {
+        data,
         gameStartMessage = $bindable(),
         gameWaitMessage = $bindable(),
-        popupWin = $bindable(),
-        popupLose = $bindable(),
-        popupDraw = $bindable(),
+        popup = $bindable(),
+    }: {
+        data: PageServerData;
+        gameStartMessage: HTMLDivElement;
+        gameWaitMessage: HTMLDivElement;
+        popup: Popup;
     } = $props();
 
+    let { room, player } = data;
+    socket.emit("joinRoom", room, player);
+
     let turn = $state("X");
-    let player = $state("O");
-    let board = $state([" ", " ", " ", " ", " ", " ", " ", " ", " "]);
+    let players = $state(Array(2));
+    let board = $state(Array(9));
+
+    let myTurn = $derived(["X", "O"].at(players.indexOf(player)));
+
     let gameStartMessageShown = $state(false);
 
-    socket.on("player", (p) => {
-        player = p;
-    });
+    socket.on("update", (game, reset) => {
+        const audio = new Audio(clickSound);
+        audio.volume = 0.5;
+        audio.play();
 
-    socket.on("update", (game) => {
         turn = game.turn;
         board = game.board;
+        players = game.players;
+
+        if (reset) {
+            popup.hidePopup();
+            gameStartMessageShown = false;
+        }
 
         for (let i = 0; i < board.length; i++) {
             const button = document.getElementById(String(i));
             if (board[i] === " ")
-                (button as HTMLButtonElement).disabled = player !== turn;
+                (button as HTMLButtonElement).disabled =
+                    game.start && turn !== myTurn;
             else (button as HTMLButtonElement).disabled = true;
         }
 
-        if (!game.start && game.players.length < 2)
+        if (!game.start || players.length < 2) {
             gameWaitMessage.style.display = "flex";
-        else {
+            popup.hidePopup();
+        } else {
             if (!gameStartMessageShown) {
                 gameStartMessageShown = true;
 
@@ -53,40 +75,37 @@
         }
     });
 
-    socket.on("winner", (winner) => {
-        if (winner === player) popupWin.showPopup();
-        else popupLose.showPopup();
+    socket.on("gameOver", (winner) => {
+        if (winner === "draw") popup.showPopup("IT'S A DRAW!");
+        else if (winner === myTurn) popup.showPopup("YOU WON!");
+        else popup.showPopup("YOU LOST!");
     });
-
-    socket.on("draw", () => popupDraw.showPopup());
 
     const click = (e: MouseEvent) => {
         const target = e.target as HTMLButtonElement;
-        const id = Number(target.id);
-
-        // Play the click sound when a button is clicked
-        playClickSound();
-
-        socket.emit("move", $page.params.id, id);
+        const cellIndex = Number(target.id);
+        socket.emit("makeMove", cellIndex);
     };
 
-    const playClickSound = () => {
-        const audio = new Audio(clickSound); // Create new audio element
-        audio.volume = 0.5; // Adjust volume
-        audio.play().catch((err) => console.log("Error playing click sound:", err));
+    const open = () => {
+        const popup = new Audio(popupMusic);
+        popup.volume = 0.5;
+        popup.play();
+    };
+
+    const close = () => {
+        restart();
+        socket.disconnect();
+
+        if (browser) {
+            window.history.back();
+            invalidateAll();
+        }
     };
 
     const restart = () => {
-        board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
-        turn = "X";
-    };
-
-    const disconnect = () => {
-        board = [" ", " ", " ", " ", " ", " ", " ", " ", " "];
-        turn = "X";
-        popupWin.style.display = "none";
-        popupLose.style.display = "none";
-        window.location.href = "/";
+        socket.emit("resetGame");
+        gameStartMessageShown = false;
     };
 </script>
 
@@ -97,7 +116,7 @@
     <div class="gameBoard">
         <div class={turn === "X" ? "player glow" : "player"} id="player1">
             <h1>X</h1>
-            <p>PLAYER 1</p>
+            <p>{players[0] ?? "PLAYER 1"}</p>
         </div>
         <section class="gameBox">
             <button id="0" onclick={click}>{board[0]}</button>
@@ -112,18 +131,16 @@
         </section>
         <div class={turn === "O" ? "player glow" : "player"} id="player2">
             <h1>O</h1>
-            <p>PLAYER 2</p>
+            <p>{players[1] ?? "PLAYER 2"}</p>
         </div>
     </div>
     <div class="buttons">
         <button class="buttons" onclick={restart}>RESTART</button>
-        <button class="buttons" onclick={disconnect}>DISCONNECT</button>
+        <button class="buttons" onclick={close}>DISCONNECT</button>
     </div>
 </div>
 
-<Popup message="YOU WIN" bind:this={popupWin} {restart} />
-<Popup message="YOU LOSE" bind:this={popupLose} {restart} />
-<Popup message="DRAW" bind:this={popupDraw} {restart} />
+<Popup bind:this={popup} {open} {close} {restart} />
 
 <div class="game-start" bind:this={gameStartMessage}>
     <div class="game-start-container">
@@ -132,7 +149,7 @@
             <img src={o} alt="xox" />
             <img src={x} alt="xox" />
         </div>
-        <p class="start-message">GAME START! YOU ARE {player}!</p>
+        <p class="start-message">GAME START!</p>
     </div>
 </div>
 
@@ -143,7 +160,7 @@
             <img src={o} alt="xox" />
             <img src={x} alt="xox" />
         </div>
-        <p class="start-message">WAITING FOR PLAYERS...</p>
+        <p class="start-message">WAITING FOR PLAYERS TO JOIN {room}...</p>
     </div>
 </div>
 
