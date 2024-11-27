@@ -2,18 +2,16 @@
     import bgm from "$lib/assets/bgm.mp3?url";
 
     let { localAudio = $bindable() } = $props();
+
+    let paused = $state(false);
 </script>
 
-<audio bind:this={localAudio} src={bgm} autoplay loop>
+<audio bind:this={localAudio} src={bgm} autoplay loop bind:paused>
     Your browser does not support the audio tag.
 </audio>
 
 <div class="floating-controls">
-    <button
-        onclick={() =>
-            localAudio?.paused ? localAudio?.play() : localAudio?.pause()}
-        >Toggle Music</button
-    >
+    <button onclick={() => (paused = !paused)}>{paused ? "▶" : "⏸"}</button>
 </div>
 
 <style>
