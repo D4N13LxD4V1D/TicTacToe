@@ -30,6 +30,7 @@
             id="player"
             name="player"
             value={form?.player ?? player ?? ""}
+            maxlength="7"
         />
         <br /><br />
 

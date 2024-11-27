@@ -25,6 +25,7 @@
             id="room"
             name="room"
             value={room ?? form?.room ?? ""}
+            maxlength="6"
         />
         <br /><br />
         <br /><br />
@@ -35,6 +36,7 @@
             id="player"
             name="player"
             value={player ?? form?.player ?? ""}
+            maxlength="7"
         />
         <br /><br />
 
@@ -97,7 +99,8 @@
         max-width: 500px;
     }
 
-    [type="text"] {
+    [type="text"],
+    [type="number"] {
         width: 100%;
         max-width: 300px;
         padding: 12px 20px;
@@ -112,14 +115,26 @@
         outline: none;
         box-shadow: 2px 2px 10px rgba(0, 255, 201, 0.3);
         transition: all 0.3s ease;
+        text-transform: uppercase;
     }
 
-    [type="text"]:focus {
+    [type="text"]:focus,
+    [type="number"]:focus {
         border: 2px solid #00ffc9;
         box-shadow: 0 0 15px #00ffc9;
         background-color: #0b0615;
         color: #00ffc9;
         text-shadow: 1px 1px 2px #18668d;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
     }
 
     label {

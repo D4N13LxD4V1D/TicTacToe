@@ -12,7 +12,7 @@ export const actions = {
     default: async ({ request, cookies }) => {
         const data = await request.formData();
 
-        const player = data.get('player') as string;
+        const player = (data.get('player') as string).toUpperCase();
         const room = data.get('room') as string;
 
         if (!player || !room) return fail(400, { player, room });
